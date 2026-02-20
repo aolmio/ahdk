@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+    <meta content="#fcc103" id="theme-meta" name="theme-color"/>
+    <meta content="yes" name="apple-mobile-web-app-capable"/>
+    <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+    <title>Shwe Calculator Pro</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --gold: #fcc103;
+            --diamond: #b9f2ff;
+            --bg: #0b0c10;
+            --card: #12141a;
+            --input-bg: #0f1117;
+            --text: #f5f6fa;
+            --label-text: #a7adbd;
+            --border: #242835;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 8px 24px rgba(0,0,0,0.18);
+            --ring: 0 0 0 4px rgba(252,193,3,0.25);
+            --header-h: 60px;
+        }
+
+        [data-theme="light"] {
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --input-bg: #f2f4f8;
+            --text: #0f172a;
+            --label-text: #475569;
+            --border: #d7dbe7;
+            --shadow-sm: 0 10px 26px rgba(2,6,23,0.08);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans Myanmar", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            transition: background 0.25s ease;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: var(--card);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            padding: calc(12px + var(--safe-top)) 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .container {
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: calc(100px + var(--safe-bottom));
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
+        }
+
+        h2 { color: var(--gold); font-size: 1.2rem; display: flex; align-items: center; gap: 10px; margin: 20px 0 10px; }
+        h2::before { content: ""; width: 8px; height: 20px; background: var(--gold); border-radius: 4px; }
+
+        label { display: block; font-size: 0.9rem; color: var(--label-text); margin-bottom: 6px; font-weight: 700; }
+        input, select {
+            width: 100%;
+            height: 52px;
+            padding: 0 14px;
+            background: var(--input-bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text);
+            font-size: 17px;
+            outline: none;
+        }
+        input:focus { border-color: var(--gold); }
+
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .btn-main {
+            width: 100%; height: 56px; background: var(--gold); border: none; border-radius: var(--radius-lg);
+            font-weight: 800; cursor: pointer; font-size: 1.1rem; box-shadow: 0 8px 20px rgba(252,193,3,0.2);
+        }
+        .btn-reset {
+            width: 100%; background: transparent; border: 1.5px solid #ff5a67; color: #ff5a67;
+            padding: 12px; border-radius: var(--radius-lg); margin-top: 10px; font-weight: 700;
+        }
+
+        .gold-banner {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+        .gold-banner__value { font-size: 1.2rem; font-weight: 900; color: var(--gold); }
+        .gold-refresh { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--input-bg); color: white; cursor: pointer; }
+        
+        .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-x: hidden; transition: 0.3s; padding-top: 60px; border-right: 1px solid var(--border); }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: var(--text); display: block; border-bottom: 1px solid var(--border); }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+        .hidden { display: none; }
+        .highlight-box { background: rgba(252,193,3,0.1); border: 1px solid var(--gold); padding: 20px; border-radius: var(--radius-lg); text-align: center; margin-top: 15px; }
+        .main-ans { font-size: 1.8rem; font-weight: 900; color: var(--gold); }
+
+        .up { color: #22c55e !important; }
+        .down { color: #ef4444 !important; }
+        .loading { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body data-theme="dark">
+    <div class="sidebar" id="mySidebar">
+        <a href="javascript:void(0)" onclick="closeNav()" style="font-size:30px;">×</a>
+        <a onclick="showView('price-calc')">💰 ရွှေဈေးနှုန်းတွက်ရန်</a>
+        <a onclick="showView('purity-calc')">⚖️ အခေါက်ချွတ်/အရည်တွက်</a>
+        <a onclick="showView('diamond-calc')">💎 စိန်နှင့် ရတနာတွက်ရန်</a>
+        <a onclick="showView('unit-converter')">⚖️ အလေးချိန်ပြောင်းရန်</a>
+        <a onclick="showView('net-weight')">⚖️ အသားတင်အလေးချိန်</a>
+    </div>
+    <div class="overlay" id="overlay" onclick="closeNav()"></div>
+
+    <header>
+        <div style="display:flex; align-items:center;">
+            <span onclick="openNav()" style="font-size:1.8rem; cursor:pointer; color:var(--gold); margin-right:15px;">☰</span>
+            <span id="nav-title" style="font-weight:bold;">SHWE CALCULATOR PRO</span>
+        </div>
+        <div onclick="toggleTheme()" style="cursor:pointer; font-size:1.5rem;" id="theme-icon">🌙</div>
+    </header>
+
+    <div class="container">
+        <div id="price-calc-view">
+            <div class="gold-banner">
+                <div>
+                    <div style="font-size:0.8rem; color:var(--label-text);">🌍 World Gold (XAU/USD)</div>
+                    <div class="gold-banner__value" id="worldGoldPrice">Loading...</div>
+                    <div id="worldGoldUpdated" style="font-size:0.7rem; color:var(--label-text);">Updating...</div>
+                </div>
+                <button class="gold-refresh" id="goldRefreshBtn" onclick="fetchWorldGoldPrice()">⟳</button>
+            </div>
+
+            <h2>ရွှေဈေးနှုန်း</h2>
+            <div class="card">
+                <label>ယနေ့ပေါက်ဈေး (ကျပ်)</label>
+                <input id="GoldPrice" type="number" placeholder="ဈေးနှုန်းထည့်ပါ...">
+            </div>
+
+            <h2>ရွှေအလေးချိန်</h2>
+            <div class="card grid-3">
+                <div><label>ကျပ်</label><input id="PKat" type="number" oninput="autoCorrectGold('PKat','PPe','PYway')"></div>
+                <div><label>ပဲ</label><input id="PPe" type="number" oninput="autoCorrectGold('PKat','PPe','PYway')"></div>
+                <div><label>ရွေး</label><input id="PYway" type="number" step="0.01" oninput="autoCorrectGold('PKat','PPe','PYway')"></div>
+            </div>
+
+            <h2>အလျော့တွက်</h2>
+            <div class="card grid-3">
+                <div><label>ကျပ်</label><input id="RKat" type="number" oninput="autoCorrectGold('RKat','RPae','RYway')"></div>
+                <div><label>ပဲ</label><input id="RPae" type="number" oninput="autoCorrectGold('RKat','RPae','RYway')"></div>
+                <div><label>ရွေး</label><input id="RYway" type="number" step="0.01" oninput="autoCorrectGold('RKat','RPae','RYway')"></div>
+            </div>
+
+            <button class="btn-main" onclick="calculatePrice()">တွက်ချက်မည်</button>
+            <button class="btn-reset" onclick="resetCalculator()">RESET</button>
+        </div>
+
+        <div id="price-result-view" class="hidden">
+            <div class="card" id="capture-area">
+                <h2 style="text-align:center;">တွက်ချက်မှုမှတ်တမ်း</h2>
+                <div id="res-list"></div>
+            </div>
+            <button class="btn-main" onclick="saveAsPhoto()" style="background:#28a745; margin-bottom:10px;">📷 ပုံအဖြစ်သိမ်းမည်</button>
+            <button class="btn-main" onclick="showView('price-calc')" style="background:#444;">နောက်သို့</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Navigation & Theme ---
+        function openNav() { document.getElementById("mySidebar").style.width = "280px"; document.getElementById("overlay").style.display = "block"; }
+        function closeNav() { document.getElementById("mySidebar").style.width = "0"; document.getElementById("overlay").style.display = "none"; }
+        
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('theme-icon').innerText = isDark ? "☀️" : "🌙";
+        }
+
+        function showView(view) {
+            document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(view + '-view').classList.remove('hidden');
+            closeNav();
+        }
+
+        // --- Core Gold Logic ---
+        function toDecimal(k, p, y) { return (parseFloat(k)||0) + ((parseFloat(p)||0)/16) + ((parseFloat(y)||0)/128); }
+
+        function autoCorrectGold(idK, idP, idY) {
+            let k = parseFloat(document.getElementById(idK).value) || 0;
+            let p = parseFloat(document.getElementById(idP).value) || 0;
+            let y = parseFloat(document.getElementById(idY).value) || 0;
+            if (y >= 8) { p += Math.floor(y / 8); y = y % 8; document.getElementById(idP).value = p; document.getElementById(idY).value = y.toFixed(2); }
+            if (p >= 16) { k += Math.floor(p / 16); p = p % 16; document.getElementById(idK).value = k; document.getElementById(idP).value = p; }
+        }
+
+        function calculatePrice() {
+            const price = parseFloat(document.getElementById('GoldPrice').value) || 0;
+            const goldKyat = toDecimal(document.getElementById('PKat').value, document.getElementById('PPe').value, document.getElementById('PYway').value);
+            const redKyat = toDecimal(document.getElementById('RKat').value, document.getElementById('RPae').value, document.getElementById('RYway').value);
+            const total = (goldKyat + redKyat) * price;
+
+            document.getElementById('res-list').innerHTML = `
+                <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #333;">
+                    <span>ရွှေဖိုး</span><span>${Math.round(goldKyat * price).toLocaleString()} ကျပ်</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #333;">
+                    <span>လျော့တွက်ဖိုး</span><span>${Math.round(redKyat * price).toLocaleString()} ကျပ်</span>
+                </div>
+                <div class="highlight-box">
+                    <div style="font-size:0.9rem;">စုစုပေါင်း</div>
+                    <div class="main-ans">${Math.round(total).toLocaleString()} ကျပ်</div>
+                </div>
+            `;
+            showView('price-result');
+        }
+
+        // --- FETCHING WORLD GOLD PRICE (FIXED) ---
+        async function fetchWorldGoldPrice() {
+            const priceEl = document.getElementById('worldGoldPrice');
+            const btn = document.getElementById('goldRefreshBtn');
+            const updatedEl = document.getElementById('worldGoldUpdated');
+
+            btn.classList.add('loading');
+            
+            // Using Binance PAXG/USDT which is a reliable 24/7 Gold Spot proxy with NO CORS issues
+            const apiURL = "https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT";
+
+            try {
+                const response = await fetch(apiURL);
+                const data = await response.json();
+                const price = parseFloat(data.price);
+                
+                priceEl.innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                updatedEl.innerText = "Live from Binance (PAXG/USDT)";
+                priceEl.classList.remove('down', 'up');
+            } catch (error) {
+                console.error("Fetch error:", error);
+                priceEl.innerText = "Error Loading";
+                updatedEl.innerText = "Check Connection";
+            } finally {
+                btn.classList.remove('loading');
+            }
+        }
+
+        function resetCalculator() {
+            document.querySelectorAll('input').forEach(i => i.value = "");
+        }
+
+        function saveAsPhoto() {
+            html2canvas(document.getElementById("capture-area")).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'shwe-result.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        // Auto-load price on start
+        window.onload = fetchWorldGoldPrice;
+    </script>
+</body>
+</html>
